@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Event-driven foreground-app detection (R-2.1). We only listen for window
+  state changes; we never read window content, which keeps the privilege
+  surface (and battery cost) minimal.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="0"
+    android:description="@string/accessibility_service_description" />
