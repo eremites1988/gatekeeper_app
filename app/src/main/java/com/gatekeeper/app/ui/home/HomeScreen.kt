@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gatekeeper.app.util.DetectionMode
 import com.gatekeeper.app.util.Permissions
 import java.time.Instant
 import java.time.ZoneId
@@ -63,8 +64,9 @@ fun HomeScreen(
             modifier = Modifier.padding(padding).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // R-9.4: the app is non-functional without the accessibility service.
-            if (!state.accessibilityEnabled) {
+            // R-9.4: warn when no detection path is available; note when the
+            // compatibility fallback is carrying detection instead.
+            if (state.detectionMode == DetectionMode.NONE) {
                 item {
                     Card(
                         onClick = {
@@ -80,15 +82,33 @@ fun HomeScreen(
                             Spacer(Modifier.padding(6.dp))
                             Column {
                                 Text(
-                                    "Accessibility service is off",
+                                    "App detection is off",
                                     style = MaterialTheme.typography.titleSmall,
                                 )
                                 Text(
-                                    "Gatekeeper can't detect apps without it. Tap to re-enable.",
+                                    "Enable the accessibility service (tap here), or grant " +
+                                        "usage access + overlay in Settings for " +
+                                        "compatibility mode.",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
                         }
+                    }
+                }
+            } else if (state.detectionMode == DetectionMode.USAGE_FALLBACK) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            "Running in compatibility mode (usage-stats detection). Gates may " +
+                                "appear a moment later than with the accessibility service.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(16.dp),
+                        )
                     }
                 }
             }

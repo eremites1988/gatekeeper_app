@@ -14,8 +14,23 @@ import android.view.accessibility.AccessibilityManager
 import androidx.core.content.ContextCompat
 import com.gatekeeper.app.service.GatekeeperAccessibilityService
 
+/**
+ * How Gatekeeper is currently able to detect foreground apps.
+ * ACCESSIBILITY is the primary, event-driven path; USAGE_FALLBACK is the
+ * compatibility mode (UsageStats polling + overlay-permission gate launch)
+ * for devices where a work-profile policy blocks third-party accessibility
+ * services; NONE means gating is inactive.
+ */
+enum class DetectionMode { ACCESSIBILITY, USAGE_FALLBACK, NONE }
+
 /** Permission/grant checks and settings deep links for onboarding (Section 10). */
 object Permissions {
+
+    fun detectionMode(context: Context): DetectionMode = when {
+        GatekeeperAccessibilityService.isRunning -> DetectionMode.ACCESSIBILITY
+        hasUsageStatsAccess(context) && canDrawOverlays(context) -> DetectionMode.USAGE_FALLBACK
+        else -> DetectionMode.NONE
+    }
 
     fun isAccessibilityServiceEnabled(context: Context): Boolean {
         val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager

@@ -178,7 +178,7 @@ fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMo
             Text("Permissions", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             PermissionStatusRow(
-                "Accessibility service",
+                "Accessibility service (primary detection)",
                 Permissions.isAccessibilityServiceEnabled(context),
             ) { context.startActivity(Permissions.accessibilitySettingsIntent()) }
             PermissionStatusRow(
@@ -186,13 +186,21 @@ fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMo
                 Permissions.isIgnoringBatteryOptimizations(context),
             ) { context.startActivity(Permissions.batteryOptimizationIntent(context)) }
             PermissionStatusRow(
-                "Display over other apps",
+                "Display over other apps (compatibility mode)",
                 Permissions.canDrawOverlays(context),
             ) { context.startActivity(Permissions.overlaySettingsIntent(context)) }
             PermissionStatusRow(
-                "Usage access (optional)",
+                "Usage access (compatibility mode)",
                 Permissions.hasUsageStatsAccess(context),
             ) { context.startActivity(Permissions.usageAccessSettingsIntent()) }
+            Text(
+                "If the accessibility service is blocked on your device (e.g. by a work " +
+                    "profile policy), grant the two compatibility-mode permissions instead — " +
+                    "Gatekeeper switches between detection modes automatically.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
 
             Spacer(Modifier.height(16.dp))
             Text(

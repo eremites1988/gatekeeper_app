@@ -8,6 +8,7 @@ import com.gatekeeper.app.data.SessionManager
 import com.gatekeeper.app.data.db.CompletionLogDao
 import com.gatekeeper.app.data.db.LogType
 import com.gatekeeper.app.data.db.SessionGrantDao
+import com.gatekeeper.app.util.DetectionMode
 import com.gatekeeper.app.util.Permissions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,7 +25,7 @@ import javax.inject.Inject
 data class ActiveGrantUi(val packageName: String, val label: String, val expiresAt: Long)
 
 data class HomeUiState(
-    val accessibilityEnabled: Boolean = true,
+    val detectionMode: DetectionMode = DetectionMode.ACCESSIBILITY,
     val tasksToday: Int = 0,
     val exercisesToday: Int = 0,
     val pagesToday: Int = 0,
@@ -73,7 +74,7 @@ class HomeViewModel @Inject constructor(
             }
 
             _uiState.value = HomeUiState(
-                accessibilityEnabled = Permissions.isAccessibilityServiceEnabled(context),
+                detectionMode = Permissions.detectionMode(context),
                 tasksToday = logDao.sumSince(LogType.TASK, dayStart),
                 exercisesToday = logDao.sumSince(LogType.EXERCISE, dayStart),
                 pagesToday = logDao.sumSince(LogType.READING, dayStart),

@@ -118,9 +118,12 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
             Spacer(Modifier.height(16.dp))
 
             StepCard(
-                title = "1. Accessibility service (required)",
-                why = "Detects which app is in the foreground so the gate can appear. " +
-                    "Gatekeeper never reads your screen content.",
+                title = "1. Accessibility service (recommended)",
+                why = "The best way to detect which app is in the foreground so the gate can " +
+                    "appear instantly. Gatekeeper never reads your screen content. " +
+                    "If this option is blocked on your device (common when a work profile " +
+                    "restricts third-party accessibility services), skip it and enable " +
+                    "compatibility mode in steps 4 and 5 instead.",
                 granted = accessibilityGranted,
                 buttonText = "Enable in settings",
             ) { context.startActivity(Permissions.accessibilitySettingsIntent()) }
@@ -147,18 +150,37 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
             ) { context.startActivity(Permissions.batteryOptimizationIntent(context)) }
 
             StepCard(
-                title = "4. Display over other apps (optional)",
-                why = "A fallback way to show the gate instantly over a blocked app.",
+                title = "4. Display over other apps" +
+                    if (accessibilityGranted) " (optional)" else " (compatibility mode)",
+                why = "Lets the gate appear over a blocked app when the accessibility " +
+                    "service isn't available.",
                 granted = overlayGranted,
                 buttonText = "Allow overlay",
             ) { context.startActivity(Permissions.overlaySettingsIntent(context)) }
 
             StepCard(
-                title = "5. Usage access (optional)",
-                why = "A secondary cross-check for foreground-app detection.",
+                title = "5. Usage access" +
+                    if (accessibilityGranted) " (optional)" else " (compatibility mode)",
+                why = "Detects the foreground app by briefly checking usage events about " +
+                    "once a second while the screen is on. Used automatically whenever the " +
+                    "accessibility service isn't available.",
                 granted = usageGranted,
                 buttonText = "Allow usage access",
             ) { context.startActivity(Permissions.usageAccessSettingsIntent()) }
+
+            val fallbackReady = usageGranted && overlayGranted
+            val detectionReady = accessibilityGranted || fallbackReady
+
+            if (!accessibilityGranted && fallbackReady) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Compatibility mode is ready. Gatekeeper will detect apps via usage " +
+                        "events; the gate may take a moment longer to appear than with the " +
+                        "accessibility service.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
             Button(
@@ -166,12 +188,15 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
                     GatekeeperForegroundService.start(context)
                     viewModel.complete()
                 },
-                enabled = accessibilityGranted,
+                enabled = detectionReady,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    if (accessibilityGranted) "Start using Gatekeeper"
-                    else "Enable the accessibility service to continue"
+                    when {
+                        accessibilityGranted -> "Start using Gatekeeper"
+                        fallbackReady -> "Start using Gatekeeper (compatibility mode)"
+                        else -> "Enable step 1, or steps 4 + 5, to continue"
+                    }
                 )
             }
             Spacer(Modifier.height(24.dp))

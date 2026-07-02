@@ -6,5 +6,6 @@
     <string name="notification_channel_description">Persistent low-priority notification that keeps Gatekeeper\'s detection and session timers running.</string>
     <string name="notification_title">Gatekeeper is active</string>
     <string name="notification_text_ok">Watching %d gated apps</string>
-    <string name="notification_text_service_off">Accessibility service is OFF — tap to fix</string>
+    <string name="notification_text_fallback">Watching %d gated apps (compatibility mode)</string>
+    <string name="notification_text_service_off">App detection is OFF — tap to set up</string>
 </resources>

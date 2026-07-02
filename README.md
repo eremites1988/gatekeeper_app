@@ -48,12 +48,26 @@ The APK lands in `app/build/outputs/apk/debug/`.
 
 Gatekeeper needs (and walks you through, on first run):
 
-1. **Accessibility service** — required; detects the foreground app. Gatekeeper
-   never reads screen content (`canRetrieveWindowContent="false"`).
+1. **Accessibility service** — the primary, event-driven detector of the
+   foreground app. Gatekeeper never reads screen content
+   (`canRetrieveWindowContent="false"`).
 2. **Notifications** (Android 13+) — for the quiet persistent notification.
 3. **Battery optimization exemption** — keeps aggressive OEM battery managers
    (Xiaomi, Samsung, Oppo, Huawei…) from killing the service.
-4. **Display over other apps** (optional) and **usage access** (optional).
+4. **Display over other apps** + **usage access** — together these enable
+   **compatibility mode** (see below); otherwise optional.
+
+### Compatibility mode (work profiles / managed devices)
+
+A work-profile admin can block third-party accessibility services
+device-wide. When the accessibility service isn't running, Gatekeeper
+automatically falls back to polling `UsageStatsManager` events (~1 s cadence,
+screen-on only) and launches the gate using the `SYSTEM_ALERT_WINDOW`
+background-launch exemption. It needs **usage access** and **display over
+other apps** granted. Detection latency is slightly higher than the
+accessibility path (the blocked app may be briefly visible), and the two modes
+hand off automatically — the accessibility service is always preferred when
+available.
 
 ## Known platform limits
 
