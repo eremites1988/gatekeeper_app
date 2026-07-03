@@ -1,0 +1,113 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+          - both
+
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'debug' || inputs.build_type == 'both' }}
+        run: ./gradlew :app:assembleDebug
+
+      - name: Build release APK (unsigned)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' || inputs.build_type == 'both' }}
+        run: ./gradlew :app:assembleRelease
+
+      - name: Upload debug APK
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'debug' || inputs.build_type == 'both' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatekeeper-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      - name: Upload release APK
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' || inputs.build_type == 'both' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatekeeper-release-apk-unsigned
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "## Gatekeeper APK Build"
+            echo ""
+            echo "- **Run:** #${{ github.run_number }}"
+            echo "- **Branch:** ${{ github.ref_name }}"
+            echo "- **Commit:** ${{ github.sha }}"
+            echo ""
+            echo "### Artifacts"
+            for apk in app/build/outputs/apk/debug/*.apk app/build/outputs/apk/release/*.apk; do
+              [ -f "$apk" ] && echo "- \`$(basename "$apk")\` ($(du -h "$apk" | cut -f1))"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/testDebugUnitTest/
+          retention-days: 30
