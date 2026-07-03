@@ -1,8 +1,8 @@
 [versions]
 agp = "8.9.2"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.27"
-hilt = "2.52"
+kotlin = "2.3.21"
+ksp = "2.3.9"
+hilt = "2.60"
 androidxHilt = "1.2.0"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
