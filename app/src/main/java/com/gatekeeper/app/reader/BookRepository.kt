@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.readium.r2.shared.publication.services.cover
+import org.readium.r2.shared.publication.services.positions
 import org.readium.r2.shared.util.Try
 import java.io.File
 import java.util.UUID

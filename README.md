@@ -31,7 +31,7 @@ net-new-progress counting) can be enabled in Settings.
 - Hilt, Room, DataStore, WorkManager
 - `AccessibilityService` (event-driven detection — no polling), foreground
   service, boot receiver
-- [Readium Kotlin Toolkit](https://github.com/readium/kotlin-toolkit) 3.3
+- [Readium Kotlin Toolkit](https://github.com/readium/kotlin-toolkit) 3.1
   (`EpubNavigatorFragment`) for the embedded DRM-free EPUB reader; pages are
   counted via Readium synthetic positions
 - Min SDK 26, target SDK 35

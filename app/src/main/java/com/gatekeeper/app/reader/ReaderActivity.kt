@@ -53,7 +53,7 @@ import org.json.JSONObject
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
-import org.readium.r2.navigator.input.DirectionalNavigationAdapter
+import org.readium.r2.navigator.util.DirectionalNavigationAdapter
 import org.readium.r2.navigator.preferences.Theme
 import org.readium.r2.shared.ExperimentalReadiumApi
 import org.readium.r2.shared.publication.Link
