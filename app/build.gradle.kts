@@ -8,7 +8,8 @@ plugins {
 
 android {
     namespace = "com.gatekeeper.app"
-    compileSdk = 35
+    // Readium 3.3.x requires compiling against Android API 36+.
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.gatekeeper.app"

@@ -177,7 +177,7 @@ Check the "Run Tests" section in the workflow summary. Test results are publishe
 ## Environment Details
 
 - **Java Version**: 17
-- **Android SDK**: 35 (compileSdk)
+- **Android SDK**: 36 (compileSdk)
 - **Min SDK**: 26
 - **Target SDK**: 35
 - **Build System**: Gradle with Kotlin DSL
