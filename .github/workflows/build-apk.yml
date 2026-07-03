@@ -1,0 +1,153 @@
+name: Build APK
+
+# Continuous-integration build. Compiles the debug and unsigned release APKs
+# and runs unit tests on GitHub-hosted runners (which, unlike the Claude Code
+# web sandbox, have unrestricted access to Google's Maven repository and the
+# Android SDK). APKs are uploaded as downloadable artifacts.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Which APK(s) to build'
+        type: choice
+        default: all
+        options:
+          - all
+          - debug
+          - release
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        if: ${{ github.event.inputs.build_type != 'release' }}
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Build release APK (unsigned)
+        if: ${{ github.event.inputs.build_type != 'debug' }}
+        run: ./gradlew :app:assembleRelease --stacktrace
+
+      - name: Upload debug APK
+        if: ${{ github.event.inputs.build_type != 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatekeeper-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload release APK
+        if: ${{ github.event.inputs.build_type != 'debug' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatekeeper-release-unsigned-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "## Gatekeeper build"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Branch | \`${GITHUB_REF_NAME}\` |"
+            echo "| Commit | \`${GITHUB_SHA:0:8}\` |"
+            echo "| Run | #${GITHUB_RUN_NUMBER} |"
+            echo ""
+            echo "### Artifacts"
+            for apk in $(find app/build/outputs/apk -name '*.apk' 2>/dev/null); do
+              size=$(du -h "$apk" | cut -f1)
+              echo "- \`$(basename "$apk")\` ($size)"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Publish test results
+        uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          report_paths: 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
+          require_tests: false
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/testDebugUnitTest
+          retention-days: 30
+          if-no-files-found: ignore
