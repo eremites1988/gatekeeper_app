@@ -46,10 +46,6 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'debug' || inputs.build_type == 'both' }}
         run: ./gradlew :app:assembleDebug
 
-      - name: Build release APK (unsigned)
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' || inputs.build_type == 'both' }}
-        run: ./gradlew :app:assembleRelease
-
       - name: Upload debug APK
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'debug' || inputs.build_type == 'both' }}
         uses: actions/upload-artifact@v4
@@ -57,6 +53,10 @@ jobs:
           name: gatekeeper-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
+
+      - name: Build release APK (unsigned)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' || inputs.build_type == 'both' }}
+        run: ./gradlew :app:assembleRelease
 
       - name: Upload release APK
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' || inputs.build_type == 'both' }}
